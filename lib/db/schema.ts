@@ -1,4 +1,5 @@
-import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core"
+import { sql } from "drizzle-orm"
+import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core"
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -45,3 +46,20 @@ export const verification = pgTable("verification", {
   createdAt: timestamp("createdAt", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updatedAt", { withTimezone: true }).notNull().defaultNow(),
 })
+
+export const projects = pgTable(
+  "projects",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()::text`),
+    userId: text("userId").notNull(),
+    name: text("name").notNull(),
+    description: text("description"),
+    status: text("status").$type<"active" | "archived">().notNull().default("active"),
+    createdAt: timestamp("createdAt", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("projects_user_created_idx").on(table.userId, table.createdAt.desc())],
+)
+
+export type Project = typeof projects.$inferSelect
+export type ProjectSummary = Pick<Project, "id" | "name" | "description" | "status" | "createdAt" | "updatedAt">
