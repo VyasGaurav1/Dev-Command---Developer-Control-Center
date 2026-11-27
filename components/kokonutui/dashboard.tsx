@@ -6,8 +6,10 @@ import {
   ChevronLeft, ChevronRight, CircleHelp, ExternalLink, Github, HardDrive,
   Globe2, LayoutDashboard, ListTodo, LockKeyhole, Menu, Plus, Search, Server,
 
-  Settings2, ShieldCheck, Sparkles, Terminal, X, Zap,
+  Settings2, ShieldCheck, Sparkles, Terminal, X, Zap, LogOut,
 } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { authClient } from "@/lib/auth-client"
 import { cn } from "@/lib/utils"
 
 type Section = "Overview" | "Projects" | "Repositories" | "Deployments" | "Servers" | "Uptime Monitoring" | "Domains & SSL" | "APIs & AI Providers" | "Logs & Incidents" | "Tasks" | "Notifications" | "Integrations" | "Settings"
@@ -64,13 +66,16 @@ function SectionPlaceholder({ section, onIntegrations }: { section: Section; onI
   )
 }
 
-export default function Dashboard() {
+export default function Dashboard({ userName, userEmail }: { userName: string; userEmail: string }) {
+  const router = useRouter()
   const [activeSection, setActiveSection] = useState<Section>("Overview")
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [commandOpen, setCommandOpen] = useState(false)
   const [integrationsOpen, setIntegrationsOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
   const [search, setSearch] = useState("")
+  const initials = userName.trim().split(/\\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase()
   const filteredSections = useMemo(() => sections.filter((item) => item.label.toLowerCase().includes(search.toLowerCase())), [search])
 
   useEffect(() => {
@@ -83,6 +88,7 @@ export default function Dashboard() {
         setCommandOpen(false)
         setIntegrationsOpen(false)
         setMobileOpen(false)
+        setAccountOpen(false)
       }
     }
     window.addEventListener("keydown", onKeyDown)
@@ -151,12 +157,15 @@ export default function Dashboard() {
             <div className="flex items-center gap-2">
               <button onClick={() => setCommandOpen(true)} className="flex h-8 items-center gap-2 rounded-md border border-white/[0.08] bg-white/[0.02] px-2.5 text-[10px] text-zinc-500 transition hover:border-white/[0.15] hover:text-zinc-300"><Search className="size-3.5" /><span className="hidden sm:inline">Search anything...</span><kbd className="ml-1 hidden rounded border border-white/[0.1] px-1 py-0.5 font-mono text-[9px] text-zinc-600 sm:inline">⌘ K</kbd></button>
               <button aria-label="Notifications" onClick={() => selectSection("Notifications")} className="relative rounded-md p-2 text-zinc-500 hover:bg-white/[0.05] hover:text-zinc-200"><Bell className="size-4" /><span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-violet-400" /></button>
-              <div className="ml-1 flex size-7 items-center justify-center rounded-full border border-white/[0.1] bg-[#242129] text-[9px] font-semibold text-zinc-300" aria-label="Account">DV</div>
+              <div className="relative ml-1">
+                <button type="button" onClick={() => setAccountOpen((open) => !open)} aria-label="Account menu" aria-expanded={accountOpen} className="flex size-7 items-center justify-center rounded-full border border-white/[0.1] bg-[#242129] text-[9px] font-semibold text-zinc-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400">{initials || "U"}</button>
+                {accountOpen && <div className="absolute right-0 top-10 z-30 w-56 rounded-lg border border-white/[0.1] bg-[#111114] p-2 shadow-xl shadow-black/40" role="group" aria-label="Account actions"><p className="truncate px-2 py-2 text-[10px] text-zinc-500">{userEmail}</p><button type="button" role="menuitem" onClick={async () => { await authClient.signOut(); router.replace("/sign-in"); router.refresh() }} className="flex h-9 w-full items-center gap-2 rounded-md px-2 text-left text-[11px] text-zinc-300 transition hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400"><LogOut className="size-3.5" />Sign out</button></div>}
+              </div>
             </div>
           </header>
           <div className="mx-auto max-w-[1280px] px-4 py-7 md:px-7 md:py-9">
             <div className="mb-7 flex flex-wrap items-end justify-between gap-4">
-              <div><div className="mb-2 flex items-center gap-2"><span className="size-1.5 rounded-full bg-amber-400" /><span className="text-[10px] font-medium uppercase tracking-[0.11em] text-zinc-500">Workspace setup</span></div><h1 className="text-[22px] font-semibold tracking-[-0.035em] text-zinc-100">{activeSection === "Overview" ? "Good morning, developer" : activeSection}</h1><p className="mt-1.5 text-[12px] text-zinc-500">Your infrastructure command center. Data will appear as providers are connected.</p></div>
+              <div><div className="mb-2 flex items-center gap-2"><span className="size-1.5 rounded-full bg-amber-400" /><span className="text-[10px] font-medium uppercase tracking-[0.11em] text-zinc-500">Workspace setup</span></div><h1 className="text-[22px] font-semibold tracking-[-0.035em] text-zinc-100">{activeSection === "Overview" ? `Good morning, ${userName.split(" ")[0] || "developer"}` : activeSection}</h1><p className="mt-1.5 text-[12px] text-zinc-500">Your infrastructure command center. Data will appear as providers are connected.</p></div>
               <button onClick={() => setIntegrationsOpen(true)} className="inline-flex h-9 items-center gap-2 rounded-md bg-violet-500 px-3.5 text-[11px] font-medium text-white shadow-sm shadow-violet-950/30 transition hover:bg-violet-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300"><Plus className="size-3.5" />Connect a service</button>
             </div>
             {activeSection === "Overview" ? <>

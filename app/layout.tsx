@@ -6,8 +6,14 @@ const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
   title: "DevCommand — Developer Control Center",
-  description: "A unified control center for projects, deployments, infrastructure, and uptime monitoring.",
+  description: "Manage projects, deployments, infrastructure, and uptime monitoring in one secure workspace.",
   generator: "v0.app",
+}
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#09090b",
 }
 
 export default function RootLayout({
