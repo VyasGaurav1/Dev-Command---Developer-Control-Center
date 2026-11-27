@@ -10,6 +10,8 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { authClient } from "@/lib/auth-client"
+import { ProjectsPanel } from "@/components/kokonutui/projects-panel"
+import type { ProjectSummary } from "@/lib/db/schema"
 import { cn } from "@/lib/utils"
 
 type Section = "Overview" | "Projects" | "Repositories" | "Deployments" | "Servers" | "Uptime Monitoring" | "Domains & SSL" | "APIs & AI Providers" | "Logs & Incidents" | "Tasks" | "Notifications" | "Integrations" | "Settings"
@@ -66,7 +68,7 @@ function SectionPlaceholder({ section, onIntegrations }: { section: Section; onI
   )
 }
 
-export default function Dashboard({ userName, userEmail }: { userName: string; userEmail: string }) {
+export default function Dashboard({ userName, userEmail, projects }: { userName: string; userEmail: string; projects: ProjectSummary[] }) {
   const router = useRouter()
   const [activeSection, setActiveSection] = useState<Section>("Overview")
   const [collapsed, setCollapsed] = useState(false)
@@ -170,9 +172,14 @@ export default function Dashboard({ userName, userEmail }: { userName: string; u
             </div>
             {activeSection === "Overview" ? <>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                {resourceCards.map(({ title, value, hint, icon: Icon }) => <article key={title} className="rounded-lg border border-white/[0.075] bg-[#101013] p-4 transition-colors hover:border-white/[0.12]">
-                  <div className="mb-5 flex items-center justify-between"><span className="text-[11px] text-zinc-500">{title}</span><Icon className="size-4 text-zinc-600" /></div><p className="text-[25px] font-semibold tracking-[-0.04em] text-zinc-300">{value}</p><p className="mt-1.5 text-[10px] text-zinc-600">{hint}</p>
-                </article>)}
+                {resourceCards.map(({ title, value, hint, icon: Icon }) => {
+                  const activeProjectCount = projects.filter((project) => project.status === "active").length
+                  const cardValue = title === "Projects" ? String(activeProjectCount) : value
+                  const cardHint = title === "Projects" ? "Active projects in your workspace" : hint
+                  return <article key={title} className="rounded-lg border border-white/[0.075] bg-[#101013] p-4 transition-colors hover:border-white/[0.12]">
+                    <div className="mb-5 flex items-center justify-between"><span className="text-[11px] text-zinc-500">{title}</span><Icon className="size-4 text-zinc-600" /></div><p className="text-[25px] font-semibold tracking-[-0.04em] text-zinc-300">{cardValue}</p><p className="mt-1.5 text-[10px] text-zinc-600">{cardHint}</p>
+                  </article>
+                })}
               </div>
               <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[1.6fr_1fr]">
                 <section className="rounded-lg border border-white/[0.075] bg-[#101013]">
@@ -192,7 +199,7 @@ export default function Dashboard({ userName, userEmail }: { userName: string; u
                 <section className="rounded-lg border border-white/[0.075] bg-[#101013]"><div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3.5"><div><h2 className="text-[12px] font-medium text-zinc-200">Recent deployments</h2><p className="mt-1 text-[10px] text-zinc-600">Build and release activity</p></div><ArrowUpRight className="size-4 text-zinc-600" /></div><div className="p-4"><SectionPlaceholder section="Deployments" onIntegrations={() => setIntegrationsOpen(true)} /></div></section>
               </div>
               <div className="mt-5 flex flex-wrap items-center justify-between gap-2 text-[10px] text-zinc-600"><span>Data freshness: connected services only</span><span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-emerald-400" />Neon connected <span className="mx-1 text-zinc-800">·</span> other providers disconnected</span></div>
-            </> : <SectionPlaceholder section={activeSection} onIntegrations={() => setIntegrationsOpen(true)} />}
+            </> : activeSection === "Projects" ? <ProjectsPanel projects={projects} /> : <SectionPlaceholder section={activeSection} onIntegrations={() => setIntegrationsOpen(true)} />}
           </div>
         </main>
       </div>
