@@ -14,6 +14,7 @@ import {
   Settings,
   HelpCircle,
   Menu,
+  type LucideIcon,
 } from "lucide-react"
 
 import { Home } from "lucide-react"
@@ -34,7 +35,7 @@ export default function Sidebar() {
     children,
   }: {
     href: string
-    icon: any
+    icon: LucideIcon
     children: React.ReactNode
   }) {
     return (
