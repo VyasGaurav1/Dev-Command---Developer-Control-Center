@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm"
-import { boolean, index, pgTable, text, timestamp } from "drizzle-orm/pg-core"
+import { boolean, check, index, pgTable, text, timestamp, unique, uniqueIndex } from "drizzle-orm/pg-core"
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
@@ -47,10 +47,46 @@ export const verification = pgTable("verification", {
   updatedAt: timestamp("updatedAt", { withTimezone: true }).notNull().defaultNow(),
 })
 
+export const workspaces = pgTable(
+  "workspaces",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()::text`),
+    name: text("name").notNull(),
+    kind: text("kind").$type<"personal" | "team">().notNull(),
+    ownerUserId: text("ownerUserId").notNull(),
+    createdAt: timestamp("createdAt", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updatedAt", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    check("workspaces_kind_check", sql`${table.kind} in ('personal', 'team')`),
+    uniqueIndex("workspaces_personal_owner_uidx").on(table.ownerUserId).where(sql`${table.kind} = 'personal'`),
+    index("workspaces_owner_created_idx").on(table.ownerUserId, table.createdAt.desc()),
+  ],
+)
+
+export type WorkspaceRole = "owner" | "admin" | "developer" | "viewer"
+
+export const workspaceMembers = pgTable(
+  "workspace_members",
+  {
+    id: text("id").primaryKey().default(sql`gen_random_uuid()::text`),
+    workspaceId: text("workspaceId").notNull(),
+    userId: text("userId").notNull(),
+    role: text("role").$type<WorkspaceRole>().notNull(),
+    createdAt: timestamp("createdAt", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    check("workspace_members_role_check", sql`${table.role} in ('owner', 'admin', 'developer', 'viewer')`),
+    unique("workspace_members_workspace_user_unique").on(table.workspaceId, table.userId),
+    index("workspace_members_user_workspace_idx").on(table.userId, table.workspaceId),
+  ],
+)
+
 export const projects = pgTable(
   "projects",
   {
     id: text("id").primaryKey().default(sql`gen_random_uuid()::text`),
+    workspaceId: text("workspaceId").notNull(),
     userId: text("userId").notNull(),
     name: text("name").notNull(),
     description: text("description"),
@@ -58,7 +94,10 @@ export const projects = pgTable(
     createdAt: timestamp("createdAt", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updatedAt", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index("projects_user_created_idx").on(table.userId, table.createdAt.desc())],
+  (table) => [
+    index("projects_user_created_idx").on(table.userId, table.createdAt.desc()),
+    index("projects_workspace_updated_idx").on(table.workspaceId, table.updatedAt.desc()),
+  ],
 )
 
 export type Project = typeof projects.$inferSelect
