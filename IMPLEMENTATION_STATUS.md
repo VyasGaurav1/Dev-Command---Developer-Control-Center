@@ -1,29 +1,34 @@
 # Implementation Status
 
 ## Current phase
-**Phase 1 — Authentication and security**, next. The initial application baseline audit and build/lint foundation are complete; this checkpoint is not a claim that DevCommand is complete.
+**Phase 1 — Authentication and security**, in progress. The baseline audit and workspace-isolation foundation are implemented; this is not a claim that DevCommand is complete.
 
 ## Audited baseline
 - Next.js App Router, React 19, TypeScript, Tailwind/shadcn; connected Neon Postgres, Drizzle, Better Auth.
-- Better Auth email/password sign-up/sign-in and server-side session lookup are present. GitHub OAuth and password reset are not configured.
-- `projects` records persist in `public.projects`; create/list/update/archive/restore actions filter by authenticated `userId`. This is single-user ownership, not workspace membership or team isolation.
-- Dashboard navigation includes projects plus many operational sections. Most non-project sections, provider status, integrations, and workspace selector are placeholders/static presentation; no deployment, monitoring, log, incident, or integration backend was found in the audited paths.
-- `next.config.mjs` had `typescript.ignoreBuildErrors: true`; removed in this checkpoint so build errors cannot be silently ignored.
-- Baseline response headers already include nosniff, referrer policy, HSTS, SAMEORIGIN, and a restrictive Permissions-Policy. No CSP or request-level rate limiting was found in reviewed configuration.
-- Connected Neon live schema includes the app's `public` Better Auth tables and `public.projects`. `neon_auth` also has organization-related tables, but the app currently uses its own `public` Better Auth tables; do not assume Neon Auth organizations are wired into this app.
+- Better Auth email/password sign-up/sign-in and server-side session lookup are present. GitHub OAuth, email verification, and password reset are not configured.
+- `projects` records persist in `public.projects`; project CRUD is now scoped by a server-validated active workspace membership. Existing user-owned projects were assigned to their owners' personal workspaces through the additive migration.
+- Dashboard navigation includes projects plus many operational sections. Most non-project sections, provider status, integrations, and operational features remain placeholders/static presentation; no deployment, monitoring, log, incident, or provider integration backend was found in the audited paths.
+- `next.config.mjs` had `typescript.ignoreBuildErrors: true`; removed in the foundation checkpoint so build errors cannot be silently ignored.
+- Baseline response headers include nosniff, referrer policy, HSTS, SAMEORIGIN, and a restrictive Permissions-Policy. No CSP or request-level rate limiting was found in reviewed configuration.
+- The app uses its own `public` Better Auth tables; do not assume Neon Auth organizations are wired into this app.
 
 ## Completed in this checkpoint
-- Audited main routes, project actions/schema/UI, auth configuration/forms, dashboard shell, package manifest, database connection, and Next config.
-- Added persistent project instructions, product/architecture/integration/security/operations documents and a requirement-by-requirement checklist; statuses are conservative and unverified functionality is not marked complete.
-- Removed build-time TypeScript error suppression.
-- Added ESLint 9, the matching Next 15 config, and FlatCompat; fixed the existing `any`, anonymous component, and valid CommonJS config lint errors without disabling project rules.
+- Added additive `workspaces` and `workspace_members` tables, personal workspace seeding, and project backfill; preserved existing project records.
+- Added the `workspaceId` project index and required workspace scope to project list/create/update/archive/restore actions.
+- Added owner/admin/developer/viewer roles, server-side membership validation for workspace switching, HttpOnly active-workspace cookie handling, and project-mutation authorization.
+- Added personal/team workspace switching and team creation UI. Member invitations and member administration are not implemented.
+- Expanded the live role constraint to support owner/admin/developer/viewer; live role inspection found one owner membership and no other role values.
+- Added a Vitest role-permission test suite and `pnpm run test` script.
+- Updated roadmap, checklist, test matrix, blockers, decisions, and this resumable checkpoint.
 
 ## Verification
-- `pnpm install --frozen-lockfile` — passed.
-- `pnpm run lint` — passed with 4 existing warnings (unused declarations in starter components); no errors.
-- `pnpm run build` with the managed project environment sourced — passed; strict type validation active, no Better Auth default-secret warning.
-- `git diff --check` — passed.
-- No browser auth/CRUD workflow was rerun in this checkpoint; no database schema changes or production infrastructure actions were made.
+- `pnpm install --frozen-lockfile` — passed after adding Vitest.
+- `pnpm run test` — passed, 3 role-permission tests.
+- `pnpm exec tsc --noEmit` — passed.
+- `pnpm run lint` — passed with 4 pre-existing unused-variable warnings; no errors.
+- `pnpm run build` — passed; strict type checking active. A build run overlapping the dev server briefly invalidated `.next` files; restarting the dev server restored preview service.
+- Read-only live role count — one `owner` membership; migration retained existing workspace and project records.
+- Browser request to `/dashboard` correctly redirected to `/sign-in`. The workspace UI itself was not browser-tested because no authenticated test session was available in the fresh browser runtime.
 
 ## Exact next task
-Implement personal/team workspaces without losing existing project data: design additive workspace and membership tables, safely backfill existing projects/users, introduce server-validated roles and membership checks, then add create/switch UI and authorization tests. Inspect the live public schema and use the Neon migration workflow before writing dependent Drizzle queries. Do not grant roles client-side or trust a workspace ID without membership validation.
+Implement workspace member administration and secure invitations: additive invitation storage, high-entropy single-use tokens stored hashed with expiry, role-limited invite/revoke/accept actions, and an accessible members/invitation UI. Preserve the current no-email integration blocker by supporting secure copy-link sharing until delivery is configured; verify verified-session and cross-workspace authorization behavior before claiming the flow complete.

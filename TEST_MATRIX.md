@@ -6,7 +6,7 @@ Status reflects checks actually run for the current checkpoint.
 |---|---|---|
 | Email sign-up/sign-in | Browser form, persisted session, reload, sign-out, protected URL redirect | Not run in this checkpoint |
 | Project CRUD | Authenticated create/list/edit/archive/restore; cross-user IDs rejected | Not run in this checkpoint |
-| Workspace tenancy | Member access, role matrix, invitation lifecycle, cross-workspace denial | Not implemented |
+| Workspace tenancy | Membership-validated context, role matrix, invitation lifecycle, cross-workspace denial | Role matrix unit tests passed (3); live migration and owner membership checked; invitation lifecycle and authenticated cross-workspace browser tests not implemented |
 | GitHub | OAuth/App callback, scoped API reads, webhook signatures/replay rejection | Not implemented |
 | Openship | Auth/connectivity, capability discovery, import and provider-confirmed deployment state | Not implemented |
 | Deployments | State machine and mocked adapter contract tests; live provider only when configured | Not implemented |
@@ -16,6 +16,6 @@ Status reflects checks actually run for the current checkpoint.
 | Build/typecheck/lint | `pnpm run build`, `pnpm run lint`, TypeScript diagnostics | Build and lint passed; lint has four existing warnings |
 | Frozen dependency install | `pnpm install --frozen-lockfile` | Passed |
 | Patch hygiene | `git diff --check` | Passed |
-| Browser UI | Sign-in + projects responsive interactions and navigation accessibility | Not run in this checkpoint |
+| Browser UI | Sign-in + projects responsive interactions and navigation accessibility | `/dashboard` correctly redirects to `/sign-in`; no authenticated browser session was available to exercise the workspace selector |
 
 No functionality is marked verified until the corresponding test is executed and passes.

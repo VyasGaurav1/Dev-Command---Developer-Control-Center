@@ -14,4 +14,4 @@ DevCommand is an independent Developer Operating System. Preserve existing worki
 - Maintain `FEATURE_CHECKLIST.md`, `IMPLEMENTATION_STATUS.md`, `DEVELOPMENT_ROADMAP.md`, `TEST_MATRIX.md`, `DECISIONS.md`, and `BLOCKERS.md` with each milestone.
 
 ## Current checkpoint
-Phase 1 authentication/security. The initial source audit and build/lint foundation are documented in `IMPLEMENTATION_STATUS.md`. The next implementation task is the secure workspace model (membership, roles, switching, and migration of existing user-owned projects), following additive migration review and server-side authorization tests.
+Phase 1 authentication/security is in progress. The additive workspace migration/backfill, membership-scoped project CRUD, role checks, and create/switch UI are implemented; see `IMPLEMENTATION_STATUS.md` for verification and exact next task. Continue with secure workspace invitations/member administration, preserving server-side membership checks and handling email delivery as an explicit blocker.

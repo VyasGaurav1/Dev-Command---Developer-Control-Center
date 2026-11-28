@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { canManageMembers, canManageProjects, canManageWorkspace } from "@/lib/workspaces/permissions"
-import type { WorkspaceRole } from "@/lib/workspaces/permissions"
+import { canManageMembers, canManageProjects, canManageWorkspace } from "./permissions"
+import type { WorkspaceRole } from "./permissions"
 
 const roles: WorkspaceRole[] = ["owner", "admin", "developer", "viewer"]
 

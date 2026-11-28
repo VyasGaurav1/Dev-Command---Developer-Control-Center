@@ -4,7 +4,7 @@
 Keep Next.js App Router, Better Auth, Drizzle, `pg` Pool, and connected Neon. The application and live schema already use this stack; migrating databases or auth providers would add risk without a requirement.
 
 ## 2026-11-28 — Workspace isolation must be enforced server-side
-Current projects are scoped to `userId`. Team workspaces require a membership model and authorization helper; a client-selected workspace ID is never proof of access. Introduce an additive/backfillable migration and preserve existing records.
+Projects are scoped to a workspace resolved from the authenticated user's membership. A client-selected workspace ID is never proof of access. The additive workspace migration backfilled existing users/projects; project mutations enforce owner/admin/developer permissions and viewers remain read-only. The active workspace selection is an HttpOnly, server-set cookie; development uses `SameSite=None; Secure` so it works in the cross-site v0 preview iframe.
 
 ## 2026-11-28 — No simulated infrastructure state
 Provider status, deployment success, monitoring measurements, usage and spend must come from a real provider/worker or be clearly labeled unavailable/estimated. Keep unconfigured integrations functional as disconnected states.

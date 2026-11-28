@@ -7,14 +7,14 @@ Status key: **Complete and verified**, **Implemented but untested**, **Partially
 - [ ] Secure sessions and sign-out — **Implemented but untested**; Better Auth session configuration and sign-out control exist.
 - [ ] Password recovery and verified-email flow — **Missing**.
 - [ ] GitHub sign-in — **Missing**; no provider configured.
-- [ ] Server-side authorization for project actions — **Implemented but untested**; actions scope by authenticated user ID.
-- [ ] Personal and team workspaces, workspace switching — **UI only**; dashboard shows a static Personal workspace selector.
-- [ ] Workspace membership, invitations, role permissions, tenant isolation — **Missing**.
+- [ ] Server-side authorization for project actions — **Implemented but untested**; project reads and mutations require an authenticated workspace membership and scope to the validated active workspace; role gates protect mutations.
+- [ ] Personal and team workspaces, workspace switching — **Implemented but untested**; personal workspace bootstrapping, team creation, membership-validated switching, and HttpOnly active-workspace selection are implemented.
+- [ ] Workspace membership, invitations, role permissions, tenant isolation — **Partially implemented**; membership table and owner/admin/developer/viewer project permissions are implemented; invite/revoke/member-management UI remains missing.
 - [ ] Custom roles, audit trail, session/credential revocation — **Missing**.
 - [ ] Credential encryption/redaction — **Missing**; no provider credential storage is implemented.
 
 ## Projects and developer workflow
-- [ ] Create/list/edit/archive/restore projects — **Implemented but untested**; persisted through Drizzle/Neon and scoped by user ID.
+- [ ] Create/list/edit/archive/restore projects — **Implemented but untested**; persisted through Drizzle/Neon and scoped by a server-validated workspace membership.
 - [ ] Project search and active/archived filters — **Implemented but untested**; client filtering over server-provided project records.
 - [ ] Repository import, branches, commits, PRs, issues, releases, Actions — **UI only**; no GitHub integration/API.
 - [ ] Project detail, environments, tags, notes, linked services — **Missing**.

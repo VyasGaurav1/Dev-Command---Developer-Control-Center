@@ -1,12 +1,12 @@
 "use server"
 
 import { and, desc, eq } from "drizzle-orm"
-import { headers } from "next/headers"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
-import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { projects } from "@/lib/db/schema"
+import { requireWorkspaceRole } from "@/lib/workspaces/access"
+import { canManageProjects } from "@/lib/workspaces/permissions"
 
 const projectInputSchema = z.object({
   name: z.string().trim().min(1, "Enter a project name.").max(80, "Project names can be up to 80 characters."),
@@ -14,15 +14,10 @@ const projectInputSchema = z.object({
 })
 
 const projectIdSchema = z.string().uuid()
-
-async function getUserId() {
-  const session = await auth.api.getSession({ headers: await headers() })
-  if (!session?.user) throw new Error("Unauthorized")
-  return session.user.id
-}
+const projectManagerRoles = ["owner", "admin", "developer"] as const
 
 export async function listProjects() {
-  const userId = await getUserId()
+  const { workspaceId } = await requireWorkspaceRole()
 
   return db
     .select({
@@ -34,16 +29,17 @@ export async function listProjects() {
       updatedAt: projects.updatedAt,
     })
     .from(projects)
-    .where(eq(projects.userId, userId))
+    .where(eq(projects.workspaceId, workspaceId))
     .orderBy(desc(projects.updatedAt))
 }
 
 export async function createProject(input: unknown) {
-  const userId = await getUserId()
+  const { userId, workspaceId } = await requireWorkspaceRole(projectManagerRoles)
   const project = projectInputSchema.parse(input)
 
   await db.insert(projects).values({
     userId,
+    workspaceId,
     name: project.name,
     description: project.description || null,
   })
@@ -52,7 +48,8 @@ export async function createProject(input: unknown) {
 }
 
 export async function updateProject(projectId: string, input: unknown) {
-  const userId = await getUserId()
+  const { workspaceId, role } = await requireWorkspaceRole()
+  if (!canManageProjects(role)) throw new Error("You do not have permission to perform this action.")
   const id = projectIdSchema.parse(projectId)
   const project = projectInputSchema.parse(input)
 
@@ -63,7 +60,7 @@ export async function updateProject(projectId: string, input: unknown) {
       description: project.description || null,
       updatedAt: new Date(),
     })
-    .where(and(eq(projects.id, id), eq(projects.userId, userId), eq(projects.status, "active")))
+    .where(and(eq(projects.id, id), eq(projects.workspaceId, workspaceId), eq(projects.status, "active")))
     .returning({ id: projects.id })
 
   if (!updatedProject) throw new Error("Project not found.")
@@ -71,13 +68,14 @@ export async function updateProject(projectId: string, input: unknown) {
 }
 
 export async function archiveProject(projectId: string) {
-  const userId = await getUserId()
+  const { workspaceId, role } = await requireWorkspaceRole()
+  if (!canManageProjects(role)) throw new Error("You do not have permission to perform this action.")
   const id = projectIdSchema.parse(projectId)
 
   const [archivedProject] = await db
     .update(projects)
     .set({ status: "archived", updatedAt: new Date() })
-    .where(and(eq(projects.id, id), eq(projects.userId, userId), eq(projects.status, "active")))
+    .where(and(eq(projects.id, id), eq(projects.workspaceId, workspaceId), eq(projects.status, "active")))
     .returning({ id: projects.id })
 
   if (!archivedProject) throw new Error("Project not found.")
@@ -85,13 +83,14 @@ export async function archiveProject(projectId: string) {
 }
 
 export async function restoreProject(projectId: string) {
-  const userId = await getUserId()
+  const { workspaceId, role } = await requireWorkspaceRole()
+  if (!canManageProjects(role)) throw new Error("You do not have permission to perform this action.")
   const id = projectIdSchema.parse(projectId)
 
   const [restoredProject] = await db
     .update(projects)
     .set({ status: "active", updatedAt: new Date() })
-    .where(and(eq(projects.id, id), eq(projects.userId, userId), eq(projects.status, "archived")))
+    .where(and(eq(projects.id, id), eq(projects.workspaceId, workspaceId), eq(projects.status, "archived")))
     .returning({ id: projects.id })
 
   if (!restoredProject) throw new Error("Project not found.")

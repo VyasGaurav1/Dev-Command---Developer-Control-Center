@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import {
-  Activity, AlertTriangle, ArrowUpRight, Bell, Box, Check, ChevronDown,
+  Activity, AlertTriangle, ArrowUpRight, Bell, Box, Check,
   ChevronLeft, ChevronRight, CircleHelp, ExternalLink, Github, HardDrive,
   Globe2, LayoutDashboard, ListTodo, LockKeyhole, Menu, Plus, Search, Server,
 
@@ -12,6 +12,8 @@ import { useRouter } from "next/navigation"
 import { authClient } from "@/lib/auth-client"
 import { ProjectsPanel } from "@/components/kokonutui/projects-panel"
 import type { ProjectSummary } from "@/lib/db/schema"
+import { WorkspaceSwitcher } from "@/components/kokonutui/workspace-switcher"
+import type { WorkspaceOption } from "@/lib/workspaces/permissions"
 import { cn } from "@/lib/utils"
 
 type Section = "Overview" | "Projects" | "Repositories" | "Deployments" | "Servers" | "Uptime Monitoring" | "Domains & SSL" | "APIs & AI Providers" | "Logs & Incidents" | "Tasks" | "Notifications" | "Integrations" | "Settings"
@@ -68,7 +70,7 @@ function SectionPlaceholder({ section, onIntegrations }: { section: Section; onI
   )
 }
 
-export default function Dashboard({ userName, userEmail, projects }: { userName: string; userEmail: string; projects: ProjectSummary[] }) {
+export default function Dashboard({ userName, userEmail, projects, workspaces, activeWorkspaceId }: { userName: string; userEmail: string; projects: ProjectSummary[]; workspaces: WorkspaceOption[]; activeWorkspaceId: string }) {
   const router = useRouter()
   const [activeSection, setActiveSection] = useState<Section>("Overview")
   const [collapsed, setCollapsed] = useState(false)
@@ -113,10 +115,7 @@ export default function Dashboard({ userName, userEmail, projects }: { userName:
         {!collapsed && <button aria-label="Collapse sidebar" onClick={() => setCollapsed(true)} className="rounded-md p-1.5 text-zinc-500 hover:bg-white/[0.06] hover:text-zinc-200"><ChevronLeft className="size-4" /></button>}
       </div>
       <div className={cn("border-b border-white/[0.07] py-3", collapsed ? "px-2" : "px-3")}>
-        <button className={cn("flex w-full items-center rounded-lg border border-white/[0.08] bg-white/[0.025] p-2 text-left hover:bg-white/[0.05]", collapsed ? "justify-center" : "gap-2.5")} aria-label="Select workspace">
-          <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-[#28252f] text-[10px] font-semibold text-violet-200">DV</span>
-          {!collapsed && <><span className="min-w-0 flex-1"><span className="block truncate text-[11px] font-medium text-zinc-200">Personal workspace</span><span className="mt-0.5 block text-[10px] text-zinc-500">Free plan</span></span><ChevronDown className="size-3.5 text-zinc-500" /></>}
-        </button>
+        <WorkspaceSwitcher workspaces={workspaces} activeWorkspaceId={activeWorkspaceId} collapsed={collapsed} />
       </div>
       <nav aria-label="Main navigation" className="flex-1 overflow-y-auto px-2.5 py-3">
         {["Workspace", "Operate", "Manage"].map((group) => (
@@ -153,7 +152,7 @@ export default function Dashboard({ userName, userEmail, projects }: { userName:
           <header className="sticky top-0 z-20 flex h-[62px] items-center justify-between border-b border-white/[0.07] bg-[#09090b]/95 px-4 backdrop-blur md:px-7">
             <div className="flex items-center gap-3">
               <button aria-label="Open navigation" onClick={() => setMobileOpen(true)} className="rounded-md p-1.5 text-zinc-400 hover:bg-white/[0.06] md:hidden"><Menu className="size-4" /></button>
-              <div className="hidden items-center gap-2 text-[11px] text-zinc-600 sm:flex"><span>Workspace</span><span>/</span><span className="text-zinc-300">{activeSection}</span></div>
+              <div className="hidden items-center gap-2 text-[11px] text-zinc-600 sm:flex"><span className="max-w-[150px] truncate">{workspaces.find((workspace) => workspace.id === activeWorkspaceId)?.name ?? "Workspace"}</span><span>/</span><span className="text-zinc-300">{activeSection}</span></div>
               <span className="text-sm font-medium text-zinc-200 sm:hidden">{activeSection}</span>
             </div>
             <div className="flex items-center gap-2">

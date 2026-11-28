@@ -5,16 +5,9 @@ import { cookies, headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { workspaceMembers, workspaces } from "@/lib/db/schema"
-import type { WorkspaceRole } from "@/lib/workspaces/permissions"
+import type { WorkspaceOption, WorkspaceRole } from "@/lib/workspaces/permissions"
 
 export const ACTIVE_WORKSPACE_COOKIE = "devcommand-active-workspace"
-
-export type WorkspaceOption = {
-  id: string
-  name: string
-  kind: "personal" | "team"
-  role: WorkspaceRole
-}
 
 export async function getAuthenticatedUserId() {
   const session = await auth.api.getSession({ headers: await headers() })
